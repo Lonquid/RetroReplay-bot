@@ -1,0 +1,26 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "RetroReplay-Bot", "RetroReplay-Bot\RetroReplay-Bot.esproj", "{F14F60DD-36EE-F920-5727-5F209D2F2A3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F14F60DD-36EE-F920-5727-5F209D2F2A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F14F60DD-36EE-F920-5727-5F209D2F2A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F14F60DD-36EE-F920-5727-5F209D2F2A3B}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{F14F60DD-36EE-F920-5727-5F209D2F2A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F14F60DD-36EE-F920-5727-5F209D2F2A3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F14F60DD-36EE-F920-5727-5F209D2F2A3B}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {95463973-A8AA-43B6-AA43-D97CDE9F4FBB}
+	EndGlobalSection
+EndGlobal
