@@ -276,4 +276,4 @@ client.on('messageCreate', async (message) => {
 });
 
 // Start the bot with your token
-client.login('MTM1NTczMDczNTY1NDUwMjUxMA.Gk2shC.RgiY4TgUl4iIKDBdbyUfxuZ0w5UWDiZhcpSpuk');
+client.login(process.env.DISCORD_TOKEN);
