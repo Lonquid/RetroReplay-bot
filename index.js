@@ -1,5 +1,7 @@
 ﻿const { Client, GatewayIntentBits, PermissionsBitField } = require('discord.js');
 const Poll = require('discord.js-poll').Poll;
+const express = require('express');  // Add Express to handle the HTTP server
+const app = express();  // Create an Express app
 
 const client = new Client({
     intents: [
@@ -7,6 +9,20 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
     ]
+});
+
+// Add the /ping route for uptime monitoring
+app.get('/ping', (req, res) => {
+    res.send('Bot is alive!');
+});
+
+// Start the Express server on port 3000 (or any other port)
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+});
+
+client.once('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
 });
 
 // List to hold all the suggested games
