@@ -290,7 +290,7 @@ client.on('messageCreate', async (message) => {
             // Prepare poll question
             let outputMessage = '**Here are the 5 selected games for this month:**\n\n';
             sortedGames.forEach((game) => {
-                outputMessage += - **${game}**\n; // Retains full name + console
+                outputMessage += - '**${game}**\n'; // Retains full name + console
             });
 
             message.reply(outputMessage);
