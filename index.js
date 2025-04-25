@@ -1,6 +1,7 @@
 ﻿const { Client, GatewayIntentBits, PermissionsBitField } = require('discord.js');
 const Poll = require('discord.js-poll').Poll;
 const express = require('express');  // Add Express to handle the HTTP server
+const fs = require('fs');  // File system module to handle file I/O
 const app = express();  // Create an Express app
 
 const client = new Client({
@@ -24,8 +25,12 @@ app.listen(PORT, () => {
 });
 
 client.once('ready', () => {
+    loadGameList();
     console.log(`Logged in as ${client.user.tag}!`);
 });
+
+// Game list file path
+const GAME_LIST_PATH = './games.json';
 
 // List to hold all the suggested games
 let suggestedGames = [];
@@ -60,9 +65,18 @@ const validConsoles = [
     'Atari 2600', 'Atari 7800',
 ];
 
-client.once('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-});
+// Load saved games from the file, if available
+function loadGameList() {
+    if (fs.existsSync(GAME_LIST_PATH)) {
+        const data = fs.readFileSync(GAME_LIST_PATH, 'utf-8');
+        suggestedGames = JSON.parse(data);
+    }
+}
+
+// Save games to the file
+function saveGameList() {
+    fs.writeFileSync(GAME_LIST_PATH, JSON.stringify(suggestedGames, null, 2));
+}
 
 client.on('messageCreate', async (message) => {
     // Don't let the bot reply to its own messages
@@ -131,6 +145,7 @@ client.on('messageCreate', async (message) => {
 
         // Add the games to the list
         suggestedGames.push(...games);
+        saveGameList();
         message.reply(`Thank you! The following games have been added to the suggestions list:\n- ${games.join('\n- ')}`);
     }
 
@@ -290,6 +305,24 @@ client.on('messageCreate', async (message) => {
             console.error('An error occurred in .random command:', error);
             message.reply('An unexpected error occurred. Please try again.');
         }
+    }
+
+    // Command to import game list from file
+    if (message.content === '.import') {
+        loadGameList();
+        message.reply(`Game list imported from file. Currently loaded: ${suggestedGames.length} games.`);
+    }
+
+    // Command to clear the game list
+    if (message.content === '.clear') {
+        if (!message.member.roles.cache.some(role => role.name === 'Retro Admin')) {
+            message.reply('You do not have permission to use this command.');
+            return;
+        }
+
+        suggestedGames = [];
+        saveGameList();
+        message.reply('Game list has been cleared!');
     }
 });
 
