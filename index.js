@@ -37,35 +37,101 @@ const GAME_LIST_PATH = './games.json';
 // List to hold all the suggested games
 let suggestedGames = [];
 
-// Mapping of abbreviations to full console names
 const consoleAbbreviations = {
+    // PlayStation
     'psx': 'PlayStation',
     'ps1': 'PlayStation',
     'playstation': 'PlayStation',
+
+    // Nintendo handhelds
     'gba': 'Game Boy Advance',
     'gameboy advance': 'Game Boy Advance',
     'game boy advance': 'Game Boy Advance',
+
+    'gbc': 'Game Boy Color',
+    'gameboy color': 'Game Boy Color',
+    'game boy color': 'Game Boy Color',
+
     'gb': 'Game Boy',
     'gameboy': 'Game Boy',
+    'game boy': 'Game Boy',
+
+    'game and watch': 'Game & Watch',
+    'game & watch': 'Game & Watch',
+
+    // Nintendo home consoles
     'snes': 'SNES',
+    'super nintendo': 'SNES',
+    'super nes': 'SNES',
+
     'nes': 'NES',
+    'nintendo entertainment system': 'NES',
+
+    'n64': 'Nintendo 64',
+    'nintendo 64': 'Nintendo 64',
+
+    'virtual boy': 'Virtual Boy',
+
+    // Sega
     'genesis': 'Sega Genesis',
     'sega genesis': 'Sega Genesis',
     'megadrive': 'Sega Genesis',
+    'mega drive': 'Sega Genesis',
+
     'master system': 'Master System',
-    'neo geo': 'Neo Geo',
-    'arcade': 'Arcade',
+    'sega cd': 'Sega CD',
+    'saturn': 'Sega Saturn',
+    'sega saturn': 'Sega Saturn',
+    'game gear': 'Game Gear',
+
+    // Atari
     'atari 2600': 'Atari 2600',
-    'atari7800': 'Atari 7800',
-    'N64': 'Nintendo 64'
+    '2600': 'Atari 2600',
+    'atari 7800': 'Atari 7800',
+    '7800': 'Atari 7800',
+    'atari jaguar': 'Atari Jaguar',
+    'jaguar': 'Atari Jaguar',
+
+    // Misc 5th-gen
+    '3do': '3DO',
+    'panasonic 3do': '3DO',
+
+    // TurboGrafx / PC Engine
+    'turbografx': 'TurboGrafx-16',
+    'turbografx-16': 'TurboGrafx-16',
+    'pc engine': 'TurboGrafx-16',
+
+    // Neo Geo
+    'neo geo': 'Neo Geo',
+    'neo geo cd': 'Neo Geo CD',
+    'neo geo pocket': 'Neo Geo Pocket',
+
+    // CD-based obscurities
+    'fm towns': 'FM Towns Marty',
+    'fm towns marty': 'FM Towns Marty',
+    'cdi': 'Philips CD-i',
+    'cd-i': 'Philips CD-i',
+    'philips cdi': 'Philips CD-i',
+    'cd32': 'Amiga CD32',
+    'amiga cd32': 'Amiga CD32',
+
+    // Vectrex
+    'vectrex': 'Vectrex',
+
+    // Arcade
+    'arcade': 'Arcade'
 };
 
-// List of valid consoles (Full names)
 const validConsoles = [
     'NES', 'SNES', 'Nintendo 64', 'Game Boy', 'Game Boy Color', 'Game Boy Advance',
-    'Sega Genesis', 'Master System', 'Sega CD', 'Neo Geo', 'PlayStation', 'Arcade',
-    'Atari 2600', 'Atari 7800',
+    'Game & Watch', 'Virtual Boy',
+    'Sega Genesis', 'Master System', 'Sega CD', 'Sega Saturn', 'Game Gear',
+    'Neo Geo', 'Neo Geo CD', 'Neo Geo Pocket',
+    'TurboGrafx-16', 'PlayStation', 'Arcade',
+    'Atari 2600', 'Atari 7800', 'Atari Jaguar', '3DO',
+    'FM Towns Marty', 'Philips CD-i', 'Amiga CD32', 'Vectrex'
 ];
+
 
 // Load saved games from the file, if available
 function loadGameList() {
@@ -124,14 +190,61 @@ client.on('messageCreate', async (message) => {
             return;
         }
 
-        // Validate that each console is one of the valid consoles (with abbreviations)
-        const invalidConsoles = games.filter(game => {
-            const console = game.match(/\((.*?)\)/);
-            const consoleName = console && console[1] ? console[1].toLowerCase() : '';
-            const fullConsoleName = consoleAbbreviations[consoleName] || consoleName;
+        // Split into valid and invalid games
+const invalidGames = [];
+const validGames = [];
 
-            return fullConsoleName && !validConsoles.includes(fullConsoleName);
-        });
+games.forEach(game => {
+    const consoleMatch = game.match(/\((.*?)\)/);
+    const rawConsole = consoleMatch && consoleMatch[1] ? consoleMatch[1].toLowerCase() : '';
+    const fullConsoleName = consoleAbbreviations[rawConsole] || rawConsole;
+    const cleanGameName = game.replace(/\(.*?\)/, '').trim();
+
+    if (validConsoles.includes(fullConsoleName)) {
+        validGames.push(`${cleanGameName} (${fullConsoleName})`);
+    } else {
+        invalidGames.push(`${cleanGameName} (Miscellaneous)`);
+    }
+});
+
+// Check for duplicates in valid + invalid suggestions
+const allSuggestions = [...validGames, ...invalidGames];
+const duplicates = allSuggestions.filter(game => suggestedGames.includes(game));
+
+if (duplicates.length > 0) {
+    message.reply(`The following games have already been suggested: ${duplicates.join(', ')}`);
+    return;
+}
+
+// If there are invalid games, confirm with user before adding
+if (invalidGames.length > 0) {
+    await message.reply(`The following game(s) have unrecognized consoles:\n- ${invalidGames.join('\n- ')}\nWould you like to suggest them anyway under **Miscellaneous**? (yes/no)`);
+
+    const filter = (response) => response.author.id === message.author.id;
+    const confirmation = await message.channel.awaitMessages({
+        filter,
+        max: 1,
+        time: 30000,
+        errors: ['time'],
+    }).catch(() => {
+        message.reply('You took too long to respond. Suggestion cancelled.');
+        return null;
+    });
+
+    if (!confirmation) return;
+
+    const answer = confirmation.first().content.toLowerCase();
+    if (answer !== 'yes') {
+        message.reply('Got it! No games were added.');
+        return;
+    }
+}
+
+// Add all games (valid + confirmed misc)
+suggestedGames.push(...allSuggestions);
+saveGameList();
+message.reply(`Thank you! The following games have been added to the suggestions list:\n- ${allSuggestions.join('\n- ')}`);
+
 
         if (invalidConsoles.length > 0) {
             message.reply(`The following game(s) have an invalid console. Please use one of the following valid consoles: ${validConsoles.join(', ')}.\n\nInvalid games: ${invalidConsoles.join(', ')}`);
