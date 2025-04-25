@@ -341,8 +341,8 @@ client.on('messageCreate', async (message) => {
     // Command to import game list from file
     if (message.content === '.import') {
         loadGameList();
-        message.reply(Game list imported from file. Currently loaded: ${suggestedGames.length} games.);
-    )}
+        message.reply(`Game list imported from file. Currently loaded: ${suggestedGames.length} games.`);
+    }
 
     // Command to clear the game list
     if (message.content === '.clear') {
