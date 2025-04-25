@@ -1,4 +1,6 @@
-﻿const { Client, GatewayIntentBits, PermissionsBitField } = require('discord.js');
+require('dotenv').config();
+
+const { Client, GatewayIntentBits, PermissionsBitField } = require('discord.js');
 const Poll = require('discord.js-poll').Poll;
 const express = require('express');  // Add Express to handle the HTTP server
 const fs = require('fs');  // File system module to handle file I/O
