@@ -238,7 +238,124 @@ client.on('messageCreate', async (message) => {
         message.reply(`Here are the valid consoles:\nFull names: ${validConsoleList}\nAbbreviations: ${abbreviationList}`);
     }
 
-    // Other commands like .random, .import, .clear can be re-added here
+    // Admin command to show random games and request the 5th game
+    if (message.content.toLowerCase() === '.random') {
+        try {
+            if (!message.member.roles.cache.some(role => role.name === 'Retro Admin')) {
+                message.reply('You do not have permission to use this command.');
+                return;
+            }
+
+            if (suggestedGames.length < 5) {
+                message.reply('There are not enough games in the list to randomly select 5 games.');
+                return;
+            }
+
+            // Select 4 random games
+            const randomGames = [];
+            while (randomGames.length < 4) {
+                const randomGame = suggestedGames[Math.floor(Math.random() * suggestedGames.length)];
+                if (!randomGames.includes(randomGame)) {
+                    randomGames.push(randomGame);
+                }
+            }
+
+            // Ask for the 5th game from admin
+            message.reply('I have selected 4 games randomly. Please provide the 5th game in the format: GameName (Console)');
+
+            const filter = (response) => response.author.id === message.author.id;
+            const collected = await message.channel.awaitMessages({
+                filter,
+                max: 1,
+                time: 60000,
+                errors: ['time'],
+            }).catch(() => {
+                message.reply('You took too long to respond! Try again.');
+                return null;
+            });
+
+            if (!collected) return;
+            const fifthGame = collected.first().content.trim();
+
+            if (!/\(.*\)/.test(fifthGame)) {
+                message.reply('Invalid format. Please use GameName (Console).');
+                return;
+            }
+
+            randomGames.push(fifthGame);
+
+            // Sort the games alphabetically
+            const sortedGames = randomGames.sort((a, b) => a.localeCompare(b));
+
+            // Prepare poll question
+            let outputMessage = '**Here are the 5 selected games for this month:**\n\n';
+            sortedGames.forEach((game) => {
+                outputMessage += - **${game}**\n; // Retains full name + console
+            });
+
+            message.reply(outputMessage);
+
+            // Ask if they want to create a poll
+            message.reply('Would you like to create a poll for these games? (yes/no)');
+
+            const pollResponse = await message.channel.awaitMessages({
+                filter,
+                max: 1,
+                time: 30000,
+                errors: ['time'],
+            }).catch(() => {
+                message.reply('You took too long to respond! Poll creation cancelled.');
+                return null;
+            });
+
+            if (!pollResponse) return;
+            const pollAnswer = pollResponse.first().content.toLowerCase();
+
+            if (pollAnswer === 'yes') {
+                const pollChannel = message.guild.channels.cache.find(channel => channel.name === 'poll');
+
+                if (!pollChannel) {
+                    message.reply('Poll channel not found! Make sure a channel named "poll" exists.');
+                    return;
+                }
+
+                // Send the poll with full game name + console
+                pollChannel.send({
+                    content: "📊 **Vote for the next game!** 📊",
+                    poll: {
+                        question: { text: "Which game should we play next?" },
+                        answers: sortedGames.map(option => ({ text: option })), // Keeps full game name (GameName (Console))
+                        allow_multiselect: false,
+                        duration: 24, // 24 hours
+                    }
+                });
+
+                message.reply('Poll created in the #poll channel!');
+            }
+        } catch (error) {
+            console.error('An error occurred in .random command:', error);
+            message.reply('An unexpected error occurred. Please try again.');
+        }
+    }
+
+    // Command to import game list from file
+    if (message.content === '.import') {
+        loadGameList();
+        message.reply(Game list imported from file. Currently loaded: ${suggestedGames.length} games.);
+    }
+
+    // Command to clear the game list
+    if (message.content === '.clear') {
+        if (!message.member.roles.cache.some(role => role.name === 'Retro Admin')) {
+            message.reply('You do not have permission to use this command.');
+            return;
+        }
+
+        suggestedGames = [];
+        saveGameList();
+        message.reply('Game list has been cleared!');
+    }
 });
 
+// Start the bot with your token
 client.login(process.env.DISCORD_TOKEN);
